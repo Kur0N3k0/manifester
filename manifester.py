@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from glob import glob
 from xml.etree import ElementTree as ET
+from apkutils import APK
 
 if len(sys.argv) != 2:
     print("[Usage] python manifester.py {target_path}")
@@ -21,14 +22,8 @@ for item in glob(f"{target_path}/*.apk"):
     filename = Path(item).stem
     manifest_uuid = str(uuid.uuid4())
 
-    zf = zipfile.ZipFile(item)
-    zf.extract("AndroidManifest.xml", manifest_uuid)
-    zf.close()
-
-    os.system(f"thirdparty\\axmldec.exe -o result/{filename}.xml {manifest_uuid}\\AndroidManifest.xml")
-    os.system(f"rmdir /s /q {manifest_uuid}")
-
-    root = ET.parse(f"result/{filename}.xml").getroot()
+    apk = APK(item)
+    root = ET.fromstring(apk.get_org_manifest())
     app = root.find("application")
     result = {}
     for child in list(app):
